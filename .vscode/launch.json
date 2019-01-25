@@ -1,0 +1,21 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "data-mine",
+            "program": "${workspaceFolder}\\bin\\scripts\\data-mine.js",
+            "outFiles": [
+                "${workspaceFolder}/bin/**/*.js"
+            ],
+            "args": [
+                "D:\\More Steam\\SteamApps\\common\\Production Line",
+                "${workspaceFolder}/src/data/data.ts"
+            ]
+        }
+    ]
+}

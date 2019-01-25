@@ -3,4 +3,5 @@ vendor/bundle/
 
 .bundle/
 .cache/
+bin/
 dist/
