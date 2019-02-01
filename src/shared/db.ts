@@ -1,6 +1,8 @@
 export interface Task {
     id: string;
-    parentId: string;
+    parentId: string | null;
+
+    friendlyName: string;
 
     processTime: number;
     constructionCost: number;

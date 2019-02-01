@@ -16,14 +16,46 @@ let db: Db = {
 };
 
 // generate db entries from production line simulation data
-let ini = new IniFile(path.join(plPath, "data/simulation/tasks/fit_chassis.ini"));
-let csv = csvParse(
-        fs.readFileSync(path.join(plPath, "data/simulation/tasks/tasks.csv")).toString(),
-        { columns: true }
-    );
+let tasksCsv = csvParse(
+    fs.readFileSync(path.join(plPath, "data/simulation/tasks/tasks.csv")).toString(),
+    { columns: true }
+);
+let locIni = new IniFile(path.join(plPath, "data/translations/EN/productiontasks.ini"));
 
-ini;
-csv;
+function locForTask(locIni: IniFile, taskId: string): string {
+    let variableName = `${taskId}_guiname`.toUpperCase();
+    let rawValue = locIni.sections['config'][variableName];
+
+    let quotedMatch = rawValue.match(/^"(.*)"$/);
+
+    if (quotedMatch) {
+        // some localizations are quoted, some aren't; unquote the quoted ones
+        // TODO: currently we just assume that there are no quoted strings with
+        // embedded quotation marks, because I really don't want to think about
+        // that
+        return quotedMatch[1];
+    } else return rawValue;
+}
+
+for (let task of tasksCsv) {
+    if (task['name'] === '') {
+        // empty row; skip
+        continue;
+    } else {
+        let id = task['name'];
+
+        db.tasks[id] = {
+            id: id,
+            parentId: null,
+            friendlyName: locForTask(locIni, id),
+            processTime: parseInt(task['process time']) || 0,
+            constructionCost: parseInt(task['construction cost']) || 0,
+            powerDemand: parseInt(task['power demand']) || 0,
+            subtaskIds: [],
+            upgradeIds: []
+        };
+    }
+}
 
 // write db to output path
 fs.writeFileSync(outPath, `
