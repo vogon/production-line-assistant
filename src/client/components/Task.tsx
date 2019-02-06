@@ -1,11 +1,15 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
+import { bindActionCreators, Dispatch, AnyAction } from 'redux';
+import { taskCollapsed, taskExpanded, RootAction } from '../actions';
 import { TaskState } from '../state';
 
 type Props = {
     tasks: ReadonlyMap<string, TaskState>;
     thisTask: TaskState;
-}
+    taskCollapsed: (id: string) => RootAction;
+    taskExpanded: (id: string) => RootAction;
+};
 
 class TaskComponent extends React.Component<Props> {
     constructor(props: Props) {
@@ -41,10 +45,26 @@ class TaskComponent extends React.Component<Props> {
         return (3600 / processTime).toFixed(2);
     }
 
+    private showExpandCollapseButton() {
+        return this.props.thisTask.archetype.subtaskIds.length > 0;
+    }
+
     render() {
+        let headerButton;
+
+        if (this.showExpandCollapseButton()) {
+            if (this.props.thisTask.collapsed) {
+                headerButton = <button type="button" className="btn btn-sm btn-success"
+                    onClick={() => this.props.taskExpanded(this.props.thisTask.archetype.id)}>+</button>;
+            } else {
+                headerButton = <button type="button" className="btn btn-sm btn-danger"
+                    onClick={() => this.props.taskCollapsed(this.props.thisTask.archetype.id)}>&ndash;</button>;
+            }
+        }
+
         return <tr>
             <th scope="row" className="align-middle"><div>
-                <button type="button" className="btn btn-sm btn-success">+</button>
+                {headerButton}
                 &nbsp;{this.props.thisTask.archetype.friendlyName}
             </div></th>
             <td><input className="form-control" type="number"
@@ -63,6 +83,7 @@ const mapStateToProps = (_: any /*, ownProps*/) => {
     return {};
 };
 
-const mapDispatchToProps = { };
+const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => 
+    bindActionCreators({ taskCollapsed, taskExpanded }, dispatch);
 
 export let Task = connect(mapStateToProps, mapDispatchToProps)(TaskComponent);

@@ -81,15 +81,9 @@ for (let taskFileName of tasksDir) {
             continue;
         }
 
-        task.parentId = iniFile.sections['task']['parent'];
-
-        for (let subtaskIndex in iniFile.sections['subtasksapplied']) {
-            let subtaskId = iniFile.sections['subtasksapplied'][subtaskIndex];
-
-            // tasks claim themselves as applied subtasks; skip those
-            if (subtaskId.localeCompare(taskId) !== 0) {
-                task.subtaskIds.push(subtaskId);
-            }
+        if (iniFile.sections['task']['parent'].length > 0) {
+            task.parentId = iniFile.sections['task']['parent'];
+            db.tasks[task.parentId].subtaskIds.push(taskId);
         }
 
         for (let upgradeIndex in iniFile.sections['upgrades']) {

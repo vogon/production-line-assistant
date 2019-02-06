@@ -14,6 +14,25 @@ class TaskListComponent extends React.Component<Props> {
     }
 
     render() {
+        let visibleTasks: TaskState[] = [];
+        let self = this;
+
+        function displayVisibleSubtree(task: TaskState) {
+            visibleTasks.push(task);
+
+            if (!task.collapsed) {
+                for (let subtaskId of task.archetype.subtaskIds) {
+                    displayVisibleSubtree(self.props.tasks.get(subtaskId)!);
+                }
+            }
+        }
+
+        for (let task of this.props.tasks.values()) {
+            if (task.archetype.parentId === null) {
+                displayVisibleSubtree(task);
+            }
+        }
+
         return <form>
             <table className="table table-sm">
                 <thead>
@@ -25,7 +44,7 @@ class TaskListComponent extends React.Component<Props> {
                     </tr>
                 </thead>
                 <tbody>
-                    {Array.from(this.props.tasks.values(), (task) =>
+                    {visibleTasks.map((task) =>
                         <Task tasks={this.props.tasks} thisTask={task} />
                     )}
                 </tbody>
