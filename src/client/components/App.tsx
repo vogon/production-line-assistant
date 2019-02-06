@@ -6,9 +6,7 @@ import { TaskList } from './TaskList';
 
 class AppComponent extends React.Component<ReturnType<typeof mapStateToProps>> {
     render() {
-        return <div className="container">
-            <TaskList tasks={this.props.tasks} />
-        </div>;
+        return <TaskList tasks={this.props.tasks} />;
     }
 }
 

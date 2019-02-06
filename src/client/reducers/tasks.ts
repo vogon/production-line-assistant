@@ -3,26 +3,25 @@ import { TaskState } from '../state';
 
 import { INITIAL_STATE } from '../state';
 
-function onDbLoaded(_: ReadonlyArray<TaskState> | undefined, 
-        action: ReturnType<typeof dbLoaded>): ReadonlyArray<TaskState> {
-    let newState: TaskState[] = [];
+function onDbLoaded(_: ReadonlyMap<string, TaskState> | undefined, 
+        action: ReturnType<typeof dbLoaded>): ReadonlyMap<string, TaskState> {
+    let newState: Map<string, TaskState> = new Map();
 
     for (let taskName in action.payload.tasks) {
         let task = action.payload.tasks[taskName];
 
-        newState.push({
+        newState.set(taskName, {
             archetype: task,
             collapsed: true,
-            count: 1,
-            childTasks: []
+            count: 1
         });
     }
 
     return newState;
 }
 
-export function tasksReducer(tasks: ReadonlyArray<TaskState> | undefined,
-        action: RootAction): ReadonlyArray<TaskState> | undefined {
+export function tasksReducer(tasks: ReadonlyMap<string, TaskState> | undefined,
+        action: RootAction): ReadonlyMap<string, TaskState> | undefined {
     switch (action.type) {
         case DB_LOADED: return onDbLoaded(tasks, action);
         default: return tasks || INITIAL_STATE.tasks;

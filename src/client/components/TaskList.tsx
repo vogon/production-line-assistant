@@ -5,7 +5,7 @@ import { TaskState } from '../state';
 import { Task } from './Task';
 
 type Props = {
-    tasks: ReadonlyArray<TaskState>
+    tasks: ReadonlyMap<string, TaskState>
 };
 
 class TaskListComponent extends React.Component<Props> {
@@ -23,10 +23,12 @@ class TaskListComponent extends React.Component<Props> {
                         <th className="col-sm-1 text-right" scope="col">total cost</th>
                         <th className="col-sm-1 text-right" scope="col">slots/hour</th>
                     </tr>
-                    {this.props.tasks.map((task) =>
-                        <Task task={task} />
-                    )}
                 </thead>
+                <tbody>
+                    {Array.from(this.props.tasks.values(), (task) =>
+                        <Task tasks={this.props.tasks} thisTask={task} />
+                    )}
+                </tbody>
             </table>
         </form>;
     }
