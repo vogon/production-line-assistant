@@ -1,14 +1,17 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch, AnyAction } from 'redux';
-import { taskCollapsed, taskExpanded, RootAction } from '../actions';
+import { taskCollapsed, taskExpanded, taskChangedCount, RootAction }
+    from '../actions';
 import { TaskState } from '../state';
 
 type Props = {
     tasks: ReadonlyMap<string, TaskState>;
     thisTask: TaskState;
+    depth: number;
     taskCollapsed: (id: string) => RootAction;
     taskExpanded: (id: string) => RootAction;
+    taskChangedCount: (id: string, count: number) => RootAction;
 };
 
 class TaskComponent extends React.Component<Props> {
@@ -23,7 +26,7 @@ class TaskComponent extends React.Component<Props> {
             totalCost += this.props.tasks.get(childTaskId)!.archetype.constructionCost;
         }
 
-        return totalCost;
+        return totalCost * this.props.thisTask.count;
     }
 
     private formatCost(cost: number): string {
@@ -42,7 +45,7 @@ class TaskComponent extends React.Component<Props> {
     }
 
     private processTimeToSlotsPerHour(processTime: number): string {
-        return (3600 / processTime).toFixed(2);
+        return (3600 / processTime * this.props.thisTask.count).toFixed(2);
     }
 
     private showExpandCollapseButton() {
@@ -51,24 +54,31 @@ class TaskComponent extends React.Component<Props> {
 
     render() {
         let headerButton;
+        let taskId = this.props.thisTask.archetype.id;
 
         if (this.showExpandCollapseButton()) {
             if (this.props.thisTask.collapsed) {
                 headerButton = <button type="button" className="btn btn-sm btn-success"
-                    onClick={() => this.props.taskExpanded(this.props.thisTask.archetype.id)}>+</button>;
+                    onClick={() => this.props.taskExpanded(taskId)}>+</button>;
             } else {
                 headerButton = <button type="button" className="btn btn-sm btn-danger"
-                    onClick={() => this.props.taskCollapsed(this.props.thisTask.archetype.id)}>&ndash;</button>;
+                    onClick={() => this.props.taskCollapsed(taskId)}>&ndash;</button>;
             }
         }
 
+        let taskNameIndentStyle: React.CSSProperties = {
+            marginLeft: `${this.props.depth}rem`
+        };
+
         return <tr>
-            <th scope="row" className="align-middle"><div>
+            <th scope="row" className="align-middle"><div style={taskNameIndentStyle}>
                 {headerButton}
                 &nbsp;{this.props.thisTask.archetype.friendlyName}
             </div></th>
             <td><input className="form-control" type="number"
-                value={this.props.thisTask.count}></input></td>
+                value={this.props.thisTask.count}
+                onChange={(e) => this.props.taskChangedCount(taskId,
+                    e.target.valueAsNumber)}></input></td>
             <td className="align-middle text-right">
                 {this.formatCost(this.totalConstructionCost())}
             </td>
@@ -84,6 +94,6 @@ const mapStateToProps = (_: any /*, ownProps*/) => {
 };
 
 const mapDispatchToProps = (dispatch: Dispatch<AnyAction>) => 
-    bindActionCreators({ taskCollapsed, taskExpanded }, dispatch);
+    bindActionCreators({ taskCollapsed, taskExpanded, taskChangedCount }, dispatch);
 
 export let Task = connect(mapStateToProps, mapDispatchToProps)(TaskComponent);

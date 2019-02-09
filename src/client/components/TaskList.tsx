@@ -14,22 +14,23 @@ class TaskListComponent extends React.Component<Props> {
     }
 
     render() {
-        let visibleTasks: TaskState[] = [];
+        let visibleTasks: { state: TaskState, depth: number }[] = [];
         let self = this;
 
-        function displayVisibleSubtree(task: TaskState) {
-            visibleTasks.push(task);
+        function displayVisibleSubtree(task: TaskState, rootDepth: number) {
+            visibleTasks.push({ state: task, depth: rootDepth });
 
             if (!task.collapsed) {
                 for (let subtaskId of task.archetype.subtaskIds) {
-                    displayVisibleSubtree(self.props.tasks.get(subtaskId)!);
+                    displayVisibleSubtree(self.props.tasks.get(subtaskId)!,
+                        rootDepth + 1);
                 }
             }
         }
 
         for (let task of this.props.tasks.values()) {
             if (task.archetype.parentId === null) {
-                displayVisibleSubtree(task);
+                displayVisibleSubtree(task, 0);
             }
         }
 
@@ -45,7 +46,8 @@ class TaskListComponent extends React.Component<Props> {
                 </thead>
                 <tbody>
                     {visibleTasks.map((task) =>
-                        <Task tasks={this.props.tasks} thisTask={task} />
+                        <Task tasks={this.props.tasks} thisTask={task.state}
+                            depth={task.depth} />
                     )}
                 </tbody>
             </table>

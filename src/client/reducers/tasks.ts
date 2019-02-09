@@ -1,5 +1,6 @@
 import { RootAction, dbLoaded, DB_LOADED, taskCollapsed, TASK_COLLAPSED,
-    taskExpanded, TASK_EXPANDED } from '../actions';
+    taskExpanded, TASK_EXPANDED, taskChangedCount, TASK_CHANGED_COUNT } 
+    from '../actions';
 import { TaskState } from '../state';
 
 import { INITIAL_STATE } from '../state';
@@ -21,14 +22,14 @@ function onDbLoaded(_: ReadonlyMap<string, TaskState> | undefined,
     return newState;
 }
 
-function onCollapse(tasks: ReadonlyMap<string, TaskState> | undefined,
-        action: ReturnType<typeof taskCollapsed>): ReadonlyMap<string, TaskState> {
+function replaceTaskStateWithId(tasks: ReadonlyMap<string, TaskState> | undefined,
+        id: string, f: (state: TaskState) => TaskState) {
     let newState: Map<string, TaskState> = new Map();
 
     if (tasks !== undefined) {
         tasks.forEach((value, key) => {
-            if (action.payload.id.localeCompare(key) === 0) {
-                newState.set(key, { ...value, collapsed: true });
+            if (id.localeCompare(key) === 0) {
+                newState.set(key, f(value));
             } else {
                 newState.set(key, value);
             }
@@ -38,21 +39,22 @@ function onCollapse(tasks: ReadonlyMap<string, TaskState> | undefined,
     return newState;
 }
 
+function onCollapse(tasks: ReadonlyMap<string, TaskState> | undefined,
+        action: ReturnType<typeof taskCollapsed>): ReadonlyMap<string, TaskState> {
+    return replaceTaskStateWithId(tasks, action.payload.id, 
+        (state) => ({ ...state, collapsed: true }));
+}
+
 function onExpand(tasks: ReadonlyMap<string, TaskState> | undefined,
         action: ReturnType<typeof taskExpanded>): ReadonlyMap<string, TaskState> {
-    let newState: Map<string, TaskState> = new Map();
+    return replaceTaskStateWithId(tasks, action.payload.id, 
+        (state) => ({ ...state, collapsed: false }));
+}
 
-    if (tasks !== undefined) {
-        tasks.forEach((value, key) => {
-            if (action.payload.id.localeCompare(key) === 0) {
-                newState.set(key, { ...value, collapsed: false });
-            } else {
-                newState.set(key, value);
-            }
-        });
-    }
-
-    return newState;
+function onChangeCount(tasks: ReadonlyMap<string, TaskState> | undefined,
+        action: ReturnType<typeof taskChangedCount>): ReadonlyMap<string, TaskState> {
+    return replaceTaskStateWithId(tasks, action.payload.id,
+        (state) => ({ ...state, count: action.payload.count }));
 }
 
 export function tasksReducer(tasks: ReadonlyMap<string, TaskState> | undefined,
@@ -61,6 +63,7 @@ export function tasksReducer(tasks: ReadonlyMap<string, TaskState> | undefined,
         case DB_LOADED: return onDbLoaded(tasks, action);
         case TASK_COLLAPSED: return onCollapse(tasks, action);
         case TASK_EXPANDED: return onExpand(tasks, action);
+        case TASK_CHANGED_COUNT: return onChangeCount(tasks, action);
         default: return tasks || INITIAL_STATE.tasks;
     }
 }
